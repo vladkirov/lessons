@@ -33,6 +33,6 @@ public class HomeWork01 {
             }
         }
         System.out.println("Array with unique elements:");
-        System.out.println(Arrays.deepToString(words));
+        System.out.println(Arrays.toString(words));
     }
 }
