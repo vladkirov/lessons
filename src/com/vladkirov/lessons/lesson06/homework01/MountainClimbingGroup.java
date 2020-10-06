@@ -53,7 +53,7 @@ public class MountainClimbingGroup {
         }
     }
 
-    public void addClimbers(Climber... climbers) {
+    public void addClimber(Climber... climbers) {
         if ((this.climbers.length - countClimbers) >= (climbers.length))
             for (Climber climber : climbers)
                 addClimber(climber);

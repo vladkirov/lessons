@@ -20,9 +20,9 @@ public class Alpine {
         MountainClimbingGroup groupSecond = new MountainClimbingGroup(2, everest);
         MountainClimbingGroup groupThird = new MountainClimbingGroup(2, elbrus);
 
-        groupFirst.addClimbers(ivan, petr, elena);
-        groupSecond.addClimbers(mike, james);
-        groupThird.addClimbers(jung, cha);
+        groupFirst.addClimber(ivan, petr, elena);
+        groupSecond.addClimber(mike, james);
+        groupThird.addClimber(jung, cha);
 
         System.out.println(groupFirst.toString());
         System.out.println(groupSecond.toString());
