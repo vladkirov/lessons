@@ -7,7 +7,7 @@ public class ListAllowedProducts {
     private float fats;
     private float carbohydrates;
     private int calories;
-    Product[] products;
+    private Product[] products;
     private int countProducts;
 
     public ListAllowedProducts(int amountProducts, float proteins, float fats, float carbohydrates, int calories) {
