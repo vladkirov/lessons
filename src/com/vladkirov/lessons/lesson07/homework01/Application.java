@@ -1,6 +1,6 @@
 package com.vladkirov.lessons.lesson07.homework01;
 
-public class Education {
+public class Application {
     public static void main(String[] args) {
         Student studentVlad = new Student("Vlad", 7, "Math", 2);
         Student studentLena = new Student("Lena", 8, "Math", 0);
@@ -11,11 +11,12 @@ public class Education {
 
         Director director = new Director("Ioan", 50);
 
-        School school = new MiddleSchool("Middle", director, 2, 3);
+        School school = new School("Middle", director, 2, 4);
 
         school.addStudent(studentIvan);
         school.addStudent(studentLena);
         school.addStudent(studentVlad);
+        school.addStudent(director);
 
         school.addTeacher(teacherMariVanna);
         school.addTeacher(teacherSanSan);

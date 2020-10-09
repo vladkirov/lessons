@@ -9,8 +9,7 @@ public class Teacher
     }
 
     @Override
-    public void teach(Student student) {
-        if (student != null && student.getSubject().equals(this.getSubject()))
-            student.study();
+    public void teach(StudAble stud) {
+        stud.study();
     }
 }
