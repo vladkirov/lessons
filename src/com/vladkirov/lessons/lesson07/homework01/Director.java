@@ -6,7 +6,8 @@ public class Director
     private int level;
 
     public Director(String name, int age) {
-        super(name, age);
+
+        super(name, age, "Math");
     }
 
     public boolean startLearning() {
@@ -21,10 +22,5 @@ public class Director
     @Override
     public void study() {
         this.level += 2;
-    }
-
-    @Override
-    public String getSubject() {
-        return "Math";
     }
 }

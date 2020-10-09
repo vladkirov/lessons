@@ -1,7 +1,7 @@
 package com.vladkirov.lessons.lesson07.homework01;
 
 public class Student
-        extends ManInSchool
+        extends Man
         implements StudAble {
     private int levelKnowledge;
 

@@ -1,7 +1,7 @@
 package com.vladkirov.lessons.lesson07.homework01;
 
 public class Teacher
-        extends ManInSchool
+        extends Man
         implements TeachAble {
 
     public Teacher(String name, int age, String subject) {
