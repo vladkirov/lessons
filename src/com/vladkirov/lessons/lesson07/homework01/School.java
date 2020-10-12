@@ -49,9 +49,9 @@ public class School {
     private void studyAll() {
         if (!isWork()) System.out.println("Learn not started!");
         for (Teacher teacher : teachers)
-            for (int j = 0; j < students.length; j++) {
-                if (students[j] != null && students[j].getSubject().equals(teacher.getSubject()))
-                    teacher.teach(students[j]);
-            }
+            if (teacher != null)
+                for (StudAble student : students)
+                    if (student != null && student.getSubject().equalsIgnoreCase(teacher.getSubject()))
+                        teacher.teach(student);
     }
 }

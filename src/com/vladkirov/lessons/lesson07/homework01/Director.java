@@ -1,6 +1,6 @@
 package com.vladkirov.lessons.lesson07.homework01;
 
-public class Director
+final public class Director
         extends Man
         implements StudAble {
     private int level;
