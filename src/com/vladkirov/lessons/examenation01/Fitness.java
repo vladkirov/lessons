@@ -3,6 +3,7 @@ package com.vladkirov.lessons.examenation01;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class Fitness {
@@ -26,10 +27,9 @@ public class Fitness {
         Objects.requireNonNull(nowDateTime, "nowDateTime is null.");
         this.nowDate = nowDateTime.toLocalDate();
         this.nowTime = nowDateTime.toLocalTime();
-    }
 
-    public Subscription[][] getSubscribers() {
-        return subscribers;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy в HH:mm");
+        Logger.println("++++-- Date and time changed: " + formatter.format(nowDateTime) + "--++++");
     }
 
     public void close() {
@@ -69,11 +69,17 @@ public class Fitness {
             else if (subscription.getTypePass() == TypePass.DAY && (zone == Zone.GYM || zone == Zone.GROUP_HALL))
                 return true;
             else {
-                Logger.println("Access denied to zone " + zone.name());
+                Logger.println("//////////////");
+                Logger.println(subscription.getVisitor().getLastName() + " " + subscription.getVisitor().getFirstName()
+                        + ": access denied to zone " + zone.name());
+                Logger.println("//////////////");
                 return false;
             }
         } else {
-            Logger.println("Access allow only from " + timeStart.toString() + " to " + timeFinish.toString());
+            Logger.println("//////////////");
+            Logger.println(subscription.getVisitor().getLastName() + " " + subscription.getVisitor().getFirstName()
+                    + ": access allow only from " + timeStart.toString() + " to " + timeFinish.toString());
+            Logger.println("//////////////");
             return false;
         }
     }
@@ -82,27 +88,40 @@ public class Fitness {
         Objects.requireNonNull(subscription, "Subscription is null");
 
         if (!validInviteDate(subscription)) {
-            Logger.println("Expired subscription.");
+            Logger.println("+++++++++++++++");
+            Logger.println(subscription.getVisitor().getLastName() + " " + subscription.getVisitor().getFirstName()
+                    + ": expired subscription.");
+            Logger.println("+++++++++++++++");
             return;
         }
 
         if (alreadyRegistered(subscription)) {
-            Logger.println("Visitor already registered.");
+            Logger.println("-------------");
+            Logger.println(subscription.getVisitor().getLastName() + " " + subscription.getVisitor().getFirstName()
+                    + ": visitor already registered.");
+            Logger.println("-------------");
             return;
         }
 
         int indexForInsertVisitor = isFreeSpace(zone);
-        if (indexForInsertVisitor >= 0 && checkAuthority(subscription, zone)) {
-            subscribers[zone.ordinal()][indexForInsertVisitor] = subscription;
-            Logger.printInviteInfo(subscription, zone, LocalDateTime.of(nowDate, nowTime));
+        if (checkAuthority(subscription, zone)) {
+            if (indexForInsertVisitor >= 0) {
+                subscribers[zone.ordinal()][indexForInsertVisitor] = subscription;
+                Logger.printInviteInfo(subscription, zone, LocalDateTime.of(nowDate, nowTime));
+            } else {
+                Logger.println("*******************");
+                Logger.println(subscription.getVisitor().getLastName() + " " + subscription.getVisitor().getFirstName()
+                        + ": zone " + zone.name() + " is full");
+                Logger.println("*******************");
+            }
         }
     }
 
     public void listAllVisitors() {
+        Logger.println("******** List all visitors ******************");
         for (Zone zone : Zone.values()) {
-            Logger.println("****************************");
             Logger.println("Zone: " + zone.name());
-            for (int i = 0; i < subscribers.length; i++)
+            for (int i = 0; i < amountVisitorsInZone; i++)
                 if (subscribers[zone.ordinal()][i] != null)
                     Logger.printPerson(subscribers[zone.ordinal()][i].getVisitor());
         }

@@ -13,12 +13,14 @@ public class Logger {
         Objects.requireNonNull(subscription);
         Objects.requireNonNull(dateTimeInvite);
 
+        println("<<<<<<  New visitor <<<<<<<");
         println("Last name: " + subscription.getVisitor().getLastName());
         println("First name: " + subscription.getVisitor().getFirstName());
         println("Invited zone: " + zone.name());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy в HH:mm");
         println("Date and time visit: " + formatter.format(dateTimeInvite));
+        println(">>>>>>>>>>>>>");
     }
 
     public static void printPerson(Visitor visitor) {
