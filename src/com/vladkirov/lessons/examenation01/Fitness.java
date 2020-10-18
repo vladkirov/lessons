@@ -45,9 +45,8 @@ public class Fitness {
 
     private boolean alreadyRegistered(Subscription subscription) {
         for (Zone zone : Zone.values())
-            for (int i = 0; i < amountVisitorsInZone; i++)
-                if (subscribers[zone.ordinal()][i] != null && subscribers[zone.ordinal()][i].equals(subscription))
-                    return true;
+            for (Subscription subscriber : subscribers[zone.ordinal()])
+                if (subscriber != null && subscriber.equals(subscription)) return true;
         return false;
     }
 
@@ -122,9 +121,9 @@ public class Fitness {
         Logger.println("******** List all visitors ******************");
         for (Zone zone : Zone.values()) {
             Logger.println("Zone: " + zone.name());
-            for (int i = 0; i < amountVisitorsInZone; i++)
-                if (subscribers[zone.ordinal()][i] != null)
-                    Logger.printPerson(subscribers[zone.ordinal()][i].getVisitor());
+            for (Subscription subscription : subscribers[zone.ordinal()])
+                if (subscription != null)
+                    Logger.printPerson(subscription.getVisitor());
         }
         Logger.println("****************************");
     }
