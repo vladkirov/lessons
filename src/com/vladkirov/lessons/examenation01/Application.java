@@ -59,6 +59,12 @@ public final class Application {
                 jack,
                 TypePass.FULL);
 
+        Subscription dayJack = new Subscription(
+                LocalDate.of(2020, 2, 3),
+                LocalDate.of(2021, 10, 3),
+                jack,
+                TypePass.DAY);
+
         Fitness fitness = new Fitness(2, LocalDateTime.of(2020, 10, 18, 10, 0));
 
         fitness.invite(dayIvan, Zone.GROUP_HALL);
@@ -76,6 +82,14 @@ public final class Application {
         fitness.invite(fullJack, Zone.GROUP_HALL);
 
         fitness.close();
+        fitness.listAllVisitors();
+
+        fitness.setNowDateTime(LocalDateTime.of(2020, 10, 18, 13, 0));
+        fitness.invite(fullJack, Zone.GROUP_HALL);
+        fitness.listAllVisitors();
+
+        fitness.setNowDateTime(LocalDateTime.of(2020, 10, 18, 18, 0));
+        fitness.invite(dayJack, Zone.GYM);
         fitness.listAllVisitors();
     }
 }
