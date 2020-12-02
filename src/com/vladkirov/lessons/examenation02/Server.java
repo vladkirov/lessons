@@ -1,19 +1,24 @@
 package com.vladkirov.lessons.examenation02;
 
+import com.vladkirov.lessons.lesson26.Signal;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class Server {
     private static int port;
     private static String stopWord;
     private CopyOnWriteArraySet<Socket> connections;
+    private ArrayBlockingQueue<Message> messages;
 
     public Server() {
         initParametersFromProperties();
         connections = new CopyOnWriteArraySet<>();
+        messages = new ArrayBlockingQueue<>(20, true);
     }
 
     public void startWork() {
@@ -71,8 +76,8 @@ public class Server {
                         close();
                         break;
                     }
-                    // TODO put in Queue
-                } catch (IOException | ClassNotFoundException e) {
+                    messages.put(message);
+                } catch (IOException | ClassNotFoundException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -94,10 +99,13 @@ public class Server {
         @Override
         public void run() {
             while (true) {
-                // TODO get from Queue
-                if (false)
+                try {
+                    Message message = messages.take();
                     for (Socket connection : connections)
-                        sendMessage(new Message("VK", "Test"), connection);
+                        sendMessage(message, connection);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
