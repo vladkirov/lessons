@@ -10,16 +10,25 @@ public class Client {
     private static int port;
     private static String stopWord;
     private Socket socket;
+    private ObjectOutputStream output;
+    private BufferedReader reader;
+    private ObjectInputStream input;
 
     public Client(String nickName) {
         initParametersFromProperties();
         this.nickName = nickName;
+
+        try {
+            socket = new Socket(host, port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initParametersFromProperties() {
         Properties prop = new Properties();
 
-        try (InputStream input = new FileInputStream("sources/chat/server.properties")) {
+        try (InputStream input = new FileInputStream("sources/chat/client.properties")) {
             prop.load(input);
             port = Integer.parseInt(prop.getProperty("PORT"));
             host = prop.getProperty("HOST");
@@ -30,12 +39,16 @@ public class Client {
     }
 
     public void startWork() {
+        Thread writerThread, readerThread;
         try {
-            socket = new Socket(host, port);
+            readerThread = new Thread(new Reader());
+            readerThread.start();
 
-            new Thread(new Reader()).start();
-            new Thread(new Writer()).start();
-        } catch (IOException e) {
+            writerThread = new Thread(new Writer());
+            writerThread.start();
+
+            writerThread.join();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -44,13 +57,18 @@ public class Client {
         @Override
         public void run() {
             try {
-                ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
-                while (true) {
-                    Message message = (Message) input.readObject();
+                Client.this.input = new ObjectInputStream(socket.getInputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            while (true) {
+                try {
+                    Message message = (Message) Client.this.input.readObject();
                     System.out.println(message.getSender() + " (" + message.getDateTime() + "): " + message.getText());
+                } catch (IOException | ClassNotFoundException ioException) {
+                    ioException.printStackTrace();
                 }
-            } catch (IOException | ClassNotFoundException ioException) {
-                ioException.printStackTrace();
             }
         }
     }
@@ -59,21 +77,27 @@ public class Client {
         @Override
         public void run() {
             try {
-                ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                Client.this.output = new ObjectOutputStream(socket.getOutputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-                while (true) {
-                    String inputLine = reader.readLine();
+            Client.this.reader = new BufferedReader(new InputStreamReader(System.in));
+
+            while (true) {
+                try {
+                    String inputLine = Client.this.reader.readLine();
                     if (inputLine.equalsIgnoreCase(stopWord)) {
-                        output.close();
-                        reader.close();
+                        Client.this.output.close();
+                        Client.this.reader.close();
                         break;
                     }
-                    output.writeObject(new Message(nickName, inputLine));
-                    output.flush();
+
+                    Client.this.output.writeObject(new Message(Client.this.nickName, inputLine));
+                    Client.this.output.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
             }
         }
     }

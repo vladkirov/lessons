@@ -1,7 +1,5 @@
 package com.vladkirov.lessons.examenation02;
 
-import com.vladkirov.lessons.lesson26.Signal;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,23 +20,39 @@ public class Server {
     }
 
     public void startWork() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        ServerSocket serverSocket = null;
+        Socket clientSocket = null;
+        try {
+            serverSocket = new ServerSocket(port);
             System.out.println("Server started...");
 
-            new Thread(new Writer()).start();
+            Thread writerThread = new Thread(new Writer());
+            writerThread.start();
 
             while (true) {
-                try (Socket clientSocket = serverSocket.accept()) {
+                try {
+                    clientSocket = serverSocket.accept();
                     connections.add(clientSocket);
                     Reader reader = new Reader(clientSocket);
 
-                    new Thread(reader).start();
+                    Thread readerThread = new Thread(reader);
+                    readerThread.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             System.out.println("Server stopped...");
+            try {
+                for (Socket connection : connections) {
+                    connection.close();
+                }
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -58,40 +72,36 @@ public class Server {
         if (!connections.isEmpty()) connections.remove(socket);
     }
 
-    private class Reader implements Runnable, AutoCloseable {
+    private class Reader implements Runnable {
         private Socket socket;
         private ObjectInputStream input;
 
         public Reader(Socket socket) throws IOException {
             this.socket = socket;
-            input = new ObjectInputStream(this.socket.getInputStream());
         }
 
         @Override
         public void run() {
+            try {
+                input = new ObjectInputStream(this.socket.getInputStream());
+
             while (true) {
+                Message message = null;
                 try {
-                    Message message = readMessage();
+                    message = (Message) input.readObject();
                     if (message.getText().equalsIgnoreCase(stopWord)) {
-                        close();
+                        removeClientConnection(socket);
                         break;
                     }
+
                     messages.put(message);
                 } catch (IOException | ClassNotFoundException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-        }
-
-        public Message readMessage() throws IOException, ClassNotFoundException {
-            return (Message) input.readObject();
-        }
-
-        @Override
-        public void close() throws IOException {
-            input.close();
-            socket.close();
-            removeClientConnection(this.socket);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -101,6 +111,7 @@ public class Server {
             while (true) {
                 try {
                     Message message = messages.take();
+                    System.out.println(message);
                     for (Socket connection : connections)
                         sendMessage(message, connection);
                 } catch (InterruptedException e) {
@@ -110,12 +121,10 @@ public class Server {
         }
 
         public void sendMessage(Message message, Socket socket) {
-            ObjectOutputStream output = null;
             try {
-                output = new ObjectOutputStream(socket.getOutputStream());
+                ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
                 output.writeObject(message);
                 output.flush();
-                output.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
