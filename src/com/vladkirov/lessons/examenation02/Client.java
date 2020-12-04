@@ -2,6 +2,7 @@ package com.vladkirov.lessons.examenation02;
 
 import java.io.*;
 import java.net.Socket;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 public class Client {
@@ -9,17 +10,15 @@ public class Client {
     private static String host;
     private static int port;
     private static String stopWord;
-    private Socket socket;
-    private ObjectOutputStream output;
-    private BufferedReader reader;
-    private ObjectInputStream input;
+
+    private ConnectionNet connection;
 
     public Client(String nickName) {
         initParametersFromProperties();
         this.nickName = nickName;
 
         try {
-            socket = new Socket(host, port);
+            connection = new ConnectionNet(new Socket(host, port));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,11 +40,11 @@ public class Client {
     public void startWork() {
         Thread writerThread, readerThread;
         try {
-            readerThread = new Thread(new Reader());
-            readerThread.start();
-
             writerThread = new Thread(new Writer());
             writerThread.start();
+
+            readerThread = new Thread(new Reader());
+            readerThread.start();
 
             writerThread.join();
         } catch (InterruptedException e) {
@@ -56,16 +55,12 @@ public class Client {
     private class Reader implements Runnable {
         @Override
         public void run() {
-            try {
-                Client.this.input = new ObjectInputStream(socket.getInputStream());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
             while (true) {
                 try {
-                    Message message = (Message) Client.this.input.readObject();
-                    System.out.println(message.getSender() + " (" + message.getDateTime() + "): " + message.getText());
+                    Message message = (Message) connection.getInput().readObject();
+                    System.out.println(message.getSender() + " ("
+                            + message.getDateTime().format(DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm:ss")) + "): "
+                            + message.getText());
                 } catch (IOException | ClassNotFoundException ioException) {
                     ioException.printStackTrace();
                 }
@@ -76,25 +71,18 @@ public class Client {
     private class Writer implements Runnable {
         @Override
         public void run() {
-            try {
-                Client.this.output = new ObjectOutputStream(socket.getOutputStream());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            Client.this.reader = new BufferedReader(new InputStreamReader(System.in));
-
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             while (true) {
                 try {
-                    String inputLine = Client.this.reader.readLine();
+                    String inputLine = reader.readLine();
                     if (inputLine.equalsIgnoreCase(stopWord)) {
-                        Client.this.output.close();
-                        Client.this.reader.close();
+                        connection.close();
+                        reader.close();
                         break;
                     }
 
-                    Client.this.output.writeObject(new Message(Client.this.nickName, inputLine));
-                    Client.this.output.flush();
+                    connection.getOutput().writeObject(new Message(Client.this.nickName, inputLine));
+                    connection.getOutput().flush();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

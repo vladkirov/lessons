@@ -10,13 +10,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class Server {
     private static int port;
     private static String stopWord;
-    private CopyOnWriteArraySet<Socket> connections;
+    private CopyOnWriteArraySet<ConnectionNet> connections;
     private ArrayBlockingQueue<Message> messages;
 
     public Server() {
         initParametersFromProperties();
         connections = new CopyOnWriteArraySet<>();
-        messages = new ArrayBlockingQueue<>(20, true);
+        messages = new ArrayBlockingQueue<>(Runtime.getRuntime().availableProcessors(), true);
     }
 
     public void startWork() {
@@ -32,9 +32,10 @@ public class Server {
             while (true) {
                 try {
                     clientSocket = serverSocket.accept();
-                    connections.add(clientSocket);
-                    Reader reader = new Reader(clientSocket);
+                    ConnectionNet ConnectionNet = new ConnectionNet(clientSocket);
+                    connections.add(ConnectionNet);
 
+                    Reader reader = new Reader(ConnectionNet);
                     Thread readerThread = new Thread(reader);
                     readerThread.start();
                 } catch (IOException e) {
@@ -46,8 +47,8 @@ public class Server {
         } finally {
             System.out.println("Server stopped...");
             try {
-                for (Socket connection : connections) {
-                    connection.close();
+                for (ConnectionNet ConnectionNet : connections) {
+                    ConnectionNet.getSocket().close();
                 }
                 serverSocket.close();
             } catch (IOException e) {
@@ -68,39 +69,34 @@ public class Server {
         }
     }
 
-    public void removeClientConnection(Socket socket) {
-        if (!connections.isEmpty()) connections.remove(socket);
+    public void removeClientConnectionNet(ConnectionNet ConnectionNet) {
+        if (!connections.isEmpty()) connections.remove(ConnectionNet);
     }
 
     private class Reader implements Runnable {
-        private Socket socket;
+        private ConnectionNet ConnectionNet;
         private ObjectInputStream input;
 
-        public Reader(Socket socket) throws IOException {
-            this.socket = socket;
+        public Reader(ConnectionNet ConnectionNet) throws IOException {
+            this.ConnectionNet = ConnectionNet;
         }
 
         @Override
         public void run() {
-            try {
-                input = new ObjectInputStream(this.socket.getInputStream());
-
             while (true) {
                 Message message = null;
                 try {
-                    message = (Message) input.readObject();
+                    message = (Message) ConnectionNet.getInput().readObject();
                     if (message.getText().equalsIgnoreCase(stopWord)) {
-                        removeClientConnection(socket);
+                        removeClientConnectionNet(ConnectionNet);
                         break;
                     }
 
+                    System.out.println(message);
                     messages.put(message);
                 } catch (IOException | ClassNotFoundException | InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
@@ -111,22 +107,17 @@ public class Server {
             while (true) {
                 try {
                     Message message = messages.take();
-                    System.out.println(message);
-                    for (Socket connection : connections)
-                        sendMessage(message, connection);
+                    for (ConnectionNet ConnectionNet : connections) {
+                        try {
+                            ConnectionNet.getOutput().writeObject(message);
+                            ConnectionNet.getOutput().flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
-        }
-
-        public void sendMessage(Message message, Socket socket) {
-            try {
-                ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-                output.writeObject(message);
-                output.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
