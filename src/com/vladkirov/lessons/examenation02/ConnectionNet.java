@@ -9,6 +9,7 @@ public class ConnectionNet {
     private Socket socket;
     private ObjectInputStream input;
     private ObjectOutputStream output;
+    private String sender;
 
     public ConnectionNet(Socket socket) {
         this.socket = socket;
@@ -20,28 +21,24 @@ public class ConnectionNet {
         }
     }
 
-    public Socket getSocket() {
-        return socket;
+    public String getSender() {
+        return sender;
     }
 
-    public void setSocket(Socket socket) {
-        this.socket = socket;
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 
     public ObjectInputStream getInput() {
         return input;
     }
 
-    public void setInput(ObjectInputStream input) {
-        this.input = input;
-    }
-
     public ObjectOutputStream getOutput() {
         return output;
-    }
-
-    public void setOutput(ObjectOutputStream output) {
-        this.output = output;
     }
 
     public void close() {

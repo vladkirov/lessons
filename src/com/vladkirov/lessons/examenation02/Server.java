@@ -74,11 +74,11 @@ public class Server {
     }
 
     private class Reader implements Runnable {
-        private ConnectionNet ConnectionNet;
+        private ConnectionNet connection;
         private ObjectInputStream input;
 
         public Reader(ConnectionNet ConnectionNet) throws IOException {
-            this.ConnectionNet = ConnectionNet;
+            this.connection = ConnectionNet;
         }
 
         @Override
@@ -86,12 +86,13 @@ public class Server {
             while (true) {
                 Message message = null;
                 try {
-                    message = (Message) ConnectionNet.getInput().readObject();
+                    message = (Message) connection.getInput().readObject();
                     if (message.getText().equalsIgnoreCase(stopWord)) {
-                        removeClientConnectionNet(ConnectionNet);
+                        removeClientConnectionNet(connection);
                         break;
                     }
 
+                    connection.setSender(message.getSender());
                     System.out.println(message);
                     messages.put(message);
                 } catch (IOException | ClassNotFoundException | InterruptedException e) {
@@ -107,13 +108,14 @@ public class Server {
             while (true) {
                 try {
                     Message message = messages.take();
-                    for (ConnectionNet ConnectionNet : connections) {
-                        try {
-                            ConnectionNet.getOutput().writeObject(message);
-                            ConnectionNet.getOutput().flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    for (ConnectionNet connection : connections) {
+                        if (connection.getSender() != message.getSender())
+                            try {
+                                connection.getOutput().writeObject(message);
+                                connection.getOutput().flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
