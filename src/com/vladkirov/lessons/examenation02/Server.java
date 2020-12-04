@@ -21,7 +21,6 @@ public class Server {
 
     public void startWork() {
         ServerSocket serverSocket = null;
-        Socket clientSocket = null;
         try {
             serverSocket = new ServerSocket(port);
             System.out.println("Server started...");
@@ -31,11 +30,11 @@ public class Server {
 
             while (true) {
                 try {
-                    clientSocket = serverSocket.accept();
-                    ConnectionNet ConnectionNet = new ConnectionNet(clientSocket);
-                    connections.add(ConnectionNet);
+                    Socket clientSocket = serverSocket.accept();
+                    ConnectionNet connection = new ConnectionNet(clientSocket);
+                    connections.add(connection);
 
-                    Reader reader = new Reader(ConnectionNet);
+                    Reader reader = new Reader(connection);
                     Thread readerThread = new Thread(reader);
                     readerThread.start();
                 } catch (IOException e) {
@@ -47,10 +46,14 @@ public class Server {
         } finally {
             System.out.println("Server stopped...");
             try {
-                for (ConnectionNet ConnectionNet : connections) {
-                    ConnectionNet.getSocket().close();
+                for (ConnectionNet connection : connections) {
+                    try {
+                        connection.getSocket().close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-                serverSocket.close();
+                if (serverSocket != null) serverSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -69,35 +72,43 @@ public class Server {
         }
     }
 
-    public void removeClientConnectionNet(ConnectionNet ConnectionNet) {
-        if (!connections.isEmpty()) connections.remove(ConnectionNet);
+    public void removeClientConnectionNet(ConnectionNet connection) {
+        if (!connections.isEmpty()) {
+            connections.remove(connection);
+            System.out.println("Client " + connection.getSender() + " was terminated.");
+        }
     }
 
     private class Reader implements Runnable {
         private ConnectionNet connection;
         private ObjectInputStream input;
 
-        public Reader(ConnectionNet ConnectionNet) throws IOException {
-            this.connection = ConnectionNet;
+        public Reader(ConnectionNet connection) {
+            this.connection = connection;
         }
 
         @Override
         public void run() {
-            while (true) {
-                Message message = null;
-                try {
+            try {
+                while (true) {
+                    Message message;
                     message = (Message) connection.getInput().readObject();
+                    connection.setSender(message.getSender());
+
+                    System.out.println(message);
+
                     if (message.getText().equalsIgnoreCase(stopWord)) {
                         removeClientConnectionNet(connection);
                         break;
                     }
 
-                    connection.setSender(message.getSender());
-                    System.out.println(message);
                     messages.put(message);
-                } catch (IOException | ClassNotFoundException | InterruptedException e) {
-                    e.printStackTrace();
                 }
+            } catch (IOException | ClassNotFoundException | InterruptedException e) {
+                if (connection.getSocket() != null)
+                    System.out.println("Connect with " + connection.getSocket() + " is already closed.");
+            } finally {
+                this.connection.close();
             }
         }
     }
@@ -109,7 +120,7 @@ public class Server {
                 try {
                     Message message = messages.take();
                     for (ConnectionNet connection : connections) {
-                        if (connection.getSender() != message.getSender())
+                        if (connection.getSender().equalsIgnoreCase(message.getSender()))
                             try {
                                 connection.getOutput().writeObject(message);
                                 connection.getOutput().flush();

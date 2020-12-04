@@ -49,5 +49,8 @@ public class ConnectionNet {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        finally {
+            if (sender != null) System.out.println("Connect with " + sender + " was closed.");
+        }
     }
 }

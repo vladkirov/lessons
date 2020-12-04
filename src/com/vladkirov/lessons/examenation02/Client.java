@@ -46,6 +46,7 @@ public class Client {
             readerThread = new Thread(new Reader());
             readerThread.start();
 
+            System.out.println("Client " + nickName + " started...");
             writerThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -55,15 +56,15 @@ public class Client {
     private class Reader implements Runnable {
         @Override
         public void run() {
-            while (true) {
-                try {
+            try {
+                while (true) {
                     Message message = (Message) connection.getInput().readObject();
                     System.out.println(message.getSender() + " ("
                             + message.getDateTime().format(DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm:ss")) + "): "
                             + message.getText());
-                } catch (IOException | ClassNotFoundException ioException) {
-                    ioException.printStackTrace();
                 }
+            } catch (IOException | ClassNotFoundException ioException) {
+                System.out.println("Connection is broken.");
             }
         }
     }
@@ -72,17 +73,23 @@ public class Client {
         @Override
         public void run() {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            while (true) {
-                try {
+            try {
+                while (true) {
                     String inputLine = reader.readLine();
+                    connection.getOutput().writeObject(new Message(Client.this.nickName, inputLine));
+                    connection.getOutput().flush();
+
                     if (inputLine.equalsIgnoreCase(stopWord)) {
                         connection.close();
                         reader.close();
                         break;
                     }
-
-                    connection.getOutput().writeObject(new Message(Client.this.nickName, inputLine));
-                    connection.getOutput().flush();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    reader.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
