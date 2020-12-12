@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Object for saving state of current game
+ */
 public class SaveGame implements Serializable {
     private final String nickName;
     private final String state;

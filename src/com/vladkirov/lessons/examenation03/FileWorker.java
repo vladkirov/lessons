@@ -9,9 +9,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Realization Strategy "Download/uplod save with files"
+ */
 public class FileWorker implements IOWorker {
-    private static final String extension = ".svfa";
+    /**
+     * Path to saves from local project directory
+     */
     private final String path;
+    /**
+     * Extensions for load file saves
+     */
+    private static final String extension = ".svfa";
 
     public FileWorker() {
         this.path = "sources/saves/";
@@ -44,6 +53,11 @@ public class FileWorker implements IOWorker {
         }
     }
 
+    /**
+     * Load concrete object in Stream
+     * @param file File object
+     * @return Save game object
+     */
     private SaveGame loadObject(File file) {
         try (ObjectInputStream objectInput = new ObjectInputStream(new FileInputStream(file))) {
             return (SaveGame) objectInput.readObject();

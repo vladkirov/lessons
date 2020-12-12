@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Independent object drawing Menu of game
+ */
 public class Menu {
     private final Map<Integer, Command> commandMap;
     private static final int COUNT_ITEMS = 5;
@@ -32,6 +35,9 @@ public class Menu {
         System.out.println("Input number menu item:");
     }
 
+    /**
+     * Lopped show menu for input action
+     */
     public void show() {
         printItems();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
